@@ -72,7 +72,28 @@ const main = async () => {
       );
       logseq.showMainUI();
     } else {
-      await sendTask(e.uuid, content, getIdFromString(sendDefaultProject));
+      let url = await sendTask(e.uuid, content, getIdFromString(sendDefaultProject));
+      let block = await logseq.Editor.getCurrentBlock();
+      if (block) {
+        let update = content;
+
+        // If the content was a task, mark it as DONE
+        const taskFlags = ["TODO", "DOING", "NOW", "LATER", "DONE"];
+        for (const f of taskFlags) {
+          if (content.includes(f)) {
+            // If the block sent to todoist was a task, mark it as done
+            update = content.replace(f, "DONE");
+            break;
+          }
+        }
+
+        // Append todoist task link to the block
+        if (url) {
+          update = `${update} [todoist](${url})`;
+        }
+
+        await logseq.Editor.updateBlock(block.uuid, update);
+      }
     }
   });
 };

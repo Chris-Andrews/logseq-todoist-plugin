@@ -1,11 +1,11 @@
 {
-  "name": "logseq-todoist-plugin",
-  "author": "hkgnp",
+  "name": "logseq-todoist-plugin-fork",
+  "author": "chris-andrews",
   "description": "Simple Todoist plugin to pull only active tasks from specified project, i.e. Inbox",
   "license": "MIT",
   "logseq": {
-    "id": "logseq-todoist-plugin",
-    "title": "logseq-todoist-plugin",
+    "id": "logseq-todoist-plugin-fork",
+    "title": "logseq-todoist-plugin-fork",
     "icon": "./icon.png",
     "main": "dist/index.html"
   },

@@ -24,12 +24,12 @@ export const sendTask = async (
   projectId?: string,
   deadline?: string,
   label?: string,
-): Promise<void> => {
+): Promise<string | null> => {
   const { apiToken, sendAppendUri, sendDefaultDeadline, sendDefaultLabel } =
     logseq.settings! as Partial<PluginSettings>;
   if (!apiToken) {
     await logseq.UI.showMsg("Ensure API token is correct", "error");
-    return;
+    return null;
   }
   const api = new TodoistApi(apiToken);
   const graphName = (await logseq.App.getCurrentGraph())!.name;
@@ -39,7 +39,7 @@ export const sendTask = async (
     content = `${content} [↗️](logseq://graph/${graphName}?block-id=${uuid})`;
   }
   const blk = await logseq.Editor.getBlock(uuid);
-  if (!blk) return;
+  if (!blk) return null;
 
   let sendDeadline: string = "";
   if (blk.deadline) {
@@ -55,15 +55,17 @@ export const sendTask = async (
 
   // Send tasks
   try {
-    await api.addTask({
+    let result = await api.addTask({
       content: content.trim(),
       dueString: sendDeadline,
       ...(projectId && { projectId: projectId }),
       ...(label && { labels: [label ?? sendDefaultLabel] }),
     });
     await logseq.UI.showMsg(`Task sent`);
+    return result.url;
   } catch (e) {
     console.error(e);
     await logseq.UI.showMsg(`Task was not sent: ${(e as Error).message}`);
   }
+  return null;
 };

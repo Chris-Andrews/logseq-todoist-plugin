@@ -15,12 +15,12 @@ const handleComments = async (taskId: string, obj: BlockToInsert) => {
     const comments: Comment[] = await api.getComments({ taskId: taskId });
     if (comments.length > 0) {
       for (const c of comments) {
-        if (c.attachment) {
-          obj.properties.attachments = `[${c.attachment.fileName}](${c.attachment.fileUrl})`;
-        }
         if (c.content) {
-          const content = obj.properties.comments;
-          obj.properties.comments = (content + ", " + c.content).substring(1);
+          obj.children.push({ content: c.content, children: [], properties: {} });
+        }
+        if (c.attachment) {
+          const content = `[${c.attachment.fileName}](${c.attachment.fileUrl})`;
+          obj.children.push({ content, children: [], properties: {} });
         }
       }
     }
@@ -47,7 +47,7 @@ const handleAppendTodoAndAppendUrlAndDeadline = (
   } = logseq.settings! as Partial<PluginSettings>;
   let treatedContent = content;
   if (retrieveAppendUrl) {
-    treatedContent = `[${treatedContent}](${url})`;
+    treatedContent = `${treatedContent} [todoist](${url})`;
   }
   if (retrieveAppendTodo) {
     treatedContent = `TODO ${treatedContent}`;
@@ -73,10 +73,10 @@ const createTasksArr = async (task: Task, parentTasks: BlockToInsert[]) => {
       task.due!,
       task.createdAt,
     ),
-    properties: { attachments: "", comments: "", todoistid: task.id },
+    properties: { todoistid: task.id },
   };
   if (task.description.length > 0) {
-    obj.content += `: ${task.description}`;
+    obj.children.push({ content: task.description, children: [], properties: {} });
   }
   obj = (await handleComments(task.id, obj)) as BlockToInsert;
   parentTasks.push(obj);
@@ -110,10 +110,10 @@ const deleteAllTasks = async (tasksArr: Task[]) => {
   const api = new TodoistApi(logseq.settings!.apiToken);
   try {
     for (const t of tasksArr) {
-      await api.deleteTask(t.id);
+      await api.closeTask(t.id);
     }
   } catch (e) {
-    await logseq.UI.showMsg(`Error deleting tasks: ${(e as Error).message}`);
+    await logseq.UI.showMsg(`Error completing tasks: ${(e as Error).message}`);
     return;
   }
 };
@@ -159,7 +159,7 @@ export const retrieveTasks = async (uuid: string, taskParams?: string) => {
     await logseq.Editor.exitEditingMode(true);
   } else {
     await logseq.Editor.insertBatchBlock(uuid, batchBlock);
-    await logseq.Editor.removeBlock(uuid);
+    // await logseq.Editor.removeBlock(uuid);
     await logseq.Editor.exitEditingMode(true);
   }
   logseq.UI.closeMsg(msgKey);
