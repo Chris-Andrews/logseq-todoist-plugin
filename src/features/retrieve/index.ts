@@ -50,7 +50,8 @@ const handleAppendTodoAndAppendUrlAndDeadline = (
     treatedContent = `${treatedContent} [todoist](${url})`;
   }
   if (retrieveAppendTodo) {
-    treatedContent = `TODO ${treatedContent}`;
+    // TODO handle TODO/DOING or NOW/LATER preference
+    treatedContent = `LATER ${treatedContent}`;
   }
   if (due?.date) {
     treatedContent = `${treatedContent}
